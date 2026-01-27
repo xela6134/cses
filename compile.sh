@@ -2,4 +2,4 @@
 
 FILENAME="$1"
 
-g++ -o $FILENAME" "$FILENAME.cpp"
+g++ -o "$FILENAME" "$FILENAME.cpp"
