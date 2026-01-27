@@ -1,5 +1,5 @@
 #!/bin/dash
 
-ARG="$1"
+FILENAME="$1"
 
-g++ -o "$ARG" "$ARG.cpp"
+g++ -o $FILENAME" "$FILENAME.cpp"
