@@ -1,0 +1,13 @@
+1. CPU Cache
+
+2. Page Cache (Disk cache)
+
+Reading
+- When I open a file, OS copies into RAM, and all the writes are done to RAM
+- When this is opened 5 minutes later, 
+
+Writing
+- When you save a file, sometimes it writes to memory first, and disk later
+
+3. TLB
+- Page table cache before doing full lookup in memory
