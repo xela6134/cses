@@ -28,7 +28,7 @@ vector<pair<int, int>> stockExposure(vector<Trade>& trades) {
     // Return all the pairs
     vector<pair<int, int>> merged;
 
-    merged.push_back(make_pair(intervals[0].first, intervals[0].second));
+    merged.push_back({intervals[0].first, intervals[0].second});
 
     for (int i = 1; i < intervals.size(); ++i) {
         int& currEnd = merged.back().second;
