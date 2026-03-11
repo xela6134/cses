@@ -9,7 +9,6 @@ using namespace std;
  * - operator[], at (with bounds checking), front, back
  * - reserve, clear, growth & reallocation logic (2x capacity)
  * - copy constructor/assignment, move constructor/assignment
- * - 
  * 
  * Extended Goals:
  * - standard compliant
@@ -63,6 +62,61 @@ public:
             --size_;
             data[size_].~T();
         }
+    }
+
+    // Need to give a reference if we want to modify the whole thing
+    T& operator[](size_t index) {
+        if (index >= size_) throw std::out_of_range("Index out of range");
+        return data_[index];
+    }
+
+    // Need both non-const and const
+    const T& operator[](size_t index) const {
+        if (index >= size_) throw std::out_of_range("Index out of range");
+        return data_[index];
+    }
+
+    T& at(size_t index) {
+        if (index >= size_) throw std::out_of_range("Index out of range");
+        return data_[index];
+    }
+
+    const T& at(size_t index) const {
+        if (index >= size_) throw std::out_of_range("Index out of range");
+        return data_[index];
+    }
+
+    void clear() {
+        for (size_t i = 0; i < size_; ++i) {
+            data_[i].~T();
+        }
+        size_ = 0;
+
+        // ::operator delete(data_);
+        // Not a good idea to do reallocation from scratch 
+        // (even if I allocate 100k elements and clear it all, high chances are im gonna reallocate 100k)
+    }
+
+    void shrink_to_fit() {
+        if (size_ == capacity_) return;
+
+        T* new_data = static_cast<T*>(::operator new(size_ * sizeof(T)));
+
+        for (size_t i; i < size_; ++i) {
+            new (new_data + i) = T(std::move(data_[i]));
+        }
+
+        // 3 and 4 come in pairs
+        // Step 3
+        for (size_t i; i < size_; ++i) {
+            data_[i].~T();
+        }
+
+        // Step 4
+        ::operator delete(data_);
+
+        data_ = new_data;
+        capacity_ = size_;
     }
 
     ~Vector() {
