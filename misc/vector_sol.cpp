@@ -32,15 +32,76 @@ public:
     {
         if (count > 0) {
             // ::operator new (allocates memory)
-            data_ = (T*)::operator new(count * sizeof(T));
+            data_ = static_cast<T*>(::operator new(count * sizeof(T)));
             capacity_ = count * 2;
 
             for (size_t i = 0; i < count; ++i) {
                 // data_ + i is automatic pointer arithmetics
+                // T(value) is copy constructor
                 new (data_ + i) T(value);   // placement new (constructing)
                 ++size_;                    // increment after each successful construction
             }
         }
+    }
+
+    Vector(const Vector& other) : data_(nullptr), size_(0), capacity_(0) {
+        data_ = static_cast<T*>(::operator new(other.size_ * sizeof(T)));
+        capacity_ = other.capacity_;
+
+        for (size_t i = 0; i < other.size_; ++i) {
+            new (data_ + i) T(other.data_[i]);
+
+            // In case the memory allocation throws,
+            // we just increment size one by one
+            ++size_;
+        }
+    }
+
+    Vector& operator=(const Vector& other) {
+        // Cleanup existing
+        for (size_t i = 0; i < size_; ++i) {
+            data_[i].~T();
+        }
+
+        ::operator delete(data_);
+
+        // Allocate new
+        data_ = static_cast<T*>(::operator new(other.size_ * sizeof(T)));
+        size_ = other.size_;
+        capacity_ = other.capacity_;
+
+        for (size_t i = 0; i < other.size_; ++i) {
+            new (data_ + i) T(other.data_[i]);
+        }
+
+        return *this;
+    }
+
+    Vector(Vector&& other) noexcept 
+        : data_(other.data_), size_(other.size_), capacity_(other.capacity_) {
+        
+        other.data_ = nullptr;
+        other.size_ = 0;
+        other.capacity_ = 0;
+    }
+
+    Vector& operator=(Vector&& other) noexcept {
+        // Cleanup existing
+        for (size_t i = 0; i < size_; ++i) {
+            data_[i].~T();
+        }
+
+        ::operator delete(data_);
+
+        data_ = other.data_;
+        size_ = other.size_;
+        capacity_ = other.capacity_;
+
+        other.data_ = nullptr;
+        other.size_ = 0;
+        other.capacity_ = 0;
+
+        return *this;
     }
 
     void push_back(const T& value) {
@@ -72,12 +133,10 @@ public:
 
     // Need both non-const and const
     const T& operator[](size_t index) const {
-        if (index >= size_) throw std::out_of_range("Index out of range");
         return data_[index];
     }
 
     T& at(size_t index) {
-        if (index >= size_) throw std::out_of_range("Index out of range");
         return data_[index];
     }
 
@@ -97,18 +156,19 @@ public:
         // (even if I allocate 100k elements and clear it all, high chances are im gonna reallocate 100k)
     }
 
+    // TODO: Revision later
     void shrink_to_fit() {
         if (size_ == capacity_) return;
 
         T* new_data = static_cast<T*>(::operator new(size_ * sizeof(T)));
 
         for (size_t i; i < size_; ++i) {
-            new (new_data + i) = T(std::move(data_[i]));
+            new (new_data + i) T(std::move(data_[i]));
         }
 
         // 3 and 4 come in pairs
         // Step 3
-        for (size_t i; i < size_; ++i) {
+        for (size_t i = 0; i < size_; ++i) {
             data_[i].~T();
         }
 
@@ -138,11 +198,6 @@ private:
         size_t new_capacity = (capacity_ == 0) ? 2 : capacity_ * 2;
 
         T* new_data = static_cast<T*>(::operator new(new_capacity * sizeof(T)));
-
-        for (size_t i = 0; i < size_; ++i) {
-            new (new_data + i) T(std::move(data_[i]));
-            data_[i].~T();
-        }
 
         size_t moved = 0;
         try {
