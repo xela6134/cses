@@ -193,6 +193,14 @@ public:
         --size_;
     }
 
+    ~Vector() {
+        for (size_t i = 0; i < size_; ++i) {
+            data_[i].~T();
+        }
+
+        ::operator delete(data_);
+    }
+
 private:
     T* data_;
     size_t size_;
