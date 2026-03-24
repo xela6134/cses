@@ -89,6 +89,40 @@ private:
     }
 
     void sellOrder(Order order) {
-
+        
     }
 };
+
+int minTransfers(vector<vector<int>>& transactions) {
+    unordered_map<int, int> balanceMap;
+    for (const auto& t : transactions) {
+        balanceMap[t[0]] -= t[2];
+        balanceMap[t[1]] += t[2];
+    }
+
+    vector<int> debts;
+    for (auto& [_, bal] : balanceMap) {
+        if (bal != 0) debts.push_back(bal);
+    }
+
+    return solve(debts, 0);
+}
+
+int solve(vector<int>& debts, int start) {
+    // skip settled debts
+    while (start < debts.size() && debts[start] == 0) ++start;
+    if (start == debts.size()) return 0;
+
+    int result = INT_MAX;
+
+    for (int i = start + 1; i < debts.size(); ++i) {
+        // only try settling with opposite sign
+        if ((debts[start] > 0) != (debts[i] > 0)) {
+            debts[i] += debts[start];
+            result = min(result, 1 + solve(debts, start + 1));
+            debts[i] -= debts[start];
+        }
+    }
+
+    return result;
+}

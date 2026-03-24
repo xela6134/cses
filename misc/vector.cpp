@@ -100,10 +100,7 @@ public:
 
         // copy construct (if this throws, *this is untouched)
         Vector temp(other);
-
-        std::swap(data_, temp.data_);
-        std::swap(size_, temp.size_);
-        std::swap(capacity_, temp.capacity_);
+        swap(temp);
 
         return *this;
 
